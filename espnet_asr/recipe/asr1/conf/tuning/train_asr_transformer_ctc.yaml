@@ -1,0 +1,32 @@
+encoder: transformer
+encoder_conf:
+  output_size: 192
+  attention_heads: 4
+  linear_units: 768
+  num_blocks: 8
+  dropout_rate: 0.1
+  positional_dropout_rate: 0.1
+  attention_dropout_rate: 0.1
+  input_layer: conv2d
+  normalize_before: true
+  pos_enc_layer_type: abs_pos
+
+decoder: null
+
+model_conf:
+  ctc_weight: 1.0
+  lsm_weight: 0.0
+
+optim: adamW
+optim_conf:
+  lr: 0.001
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 25000
+
+max_epoch: 30
+batch_type: numel
+batch_bins: 8000000
+accum_grad: 2
+patience: 3

@@ -1,0 +1,33 @@
+# ESPnet ASR large artifacts
+espnet_asr/recipe/asr1/dump/
+espnet_asr/recipe/asr1/downloads/
+
+# Ignore heavy exp artifacts by default
+espnet_asr/recipe/asr1/exp/**
+
+# Allow exp directories
+!espnet_asr/recipe/asr1/exp/
+!espnet_asr/recipe/asr1/exp/*/
+
+# Allow reproducibility files in all model dirs
+!espnet_asr/recipe/asr1/exp/*/config.yaml
+!espnet_asr/recipe/asr1/exp/*/train.log
+!espnet_asr/recipe/asr1/exp/*/valid.acc.ave.pth
+
+# Allow test result folders
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test*/
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test*/**
+
+# Allow Whisper result folders
+!espnet_asr/recipe/asr1/exp/whisper_*_test/
+!espnet_asr/recipe/asr1/exp/whisper_*_test/**
+!espnet_asr/recipe/asr1/exp/whisper_*_test_1k/
+!espnet_asr/recipe/asr1/exp/whisper_*_test_1k/**
+
+# Still block heavy artifacts if accidentally elsewhere
+espnet_asr/recipe/asr1/dump/
+*.ark
+*.npy
+*.npz
+*.wav
+*.flac

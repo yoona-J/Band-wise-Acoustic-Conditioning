@@ -1,0 +1,27 @@
+encoder: rnn
+encoder_conf:
+  rnn_type: lstm
+  bidirectional: true
+  num_layers: 4
+  hidden_size: 320
+  dropout: 0.2
+
+decoder: null
+
+model_conf:
+  ctc_weight: 1.0
+  lsm_weight: 0.0
+
+optim: adamW
+optim_conf:
+  lr: 0.001
+
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 10000
+
+max_epoch: 30
+batch_type: numel
+batch_bins: 6000000
+accum_grad: 2
+patience: 5
