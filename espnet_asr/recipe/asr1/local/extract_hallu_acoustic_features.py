@@ -13,11 +13,10 @@ except Exception:
     HAS_PRAAT = False
 
 
+# Reference transcript 없이 wav만으로 계산 가능한 feature만 사용
 FEATURE_NAMES = [
     "f0_std",
     "f0_range",
-    "token_per_sec",
-    "duration_per_token",
     "silence_ratio",
     "num_pauses",
     "mean_pause",
@@ -26,29 +25,6 @@ FEATURE_NAMES = [
     "jitter_local",
     "shimmer_local",
 ]
-
-
-def load_text(text_path):
-    text_dict = {}
-    with open(text_path, "r", encoding="utf-8") as f:
-        for line in f:
-            parts = line.strip().split(maxsplit=1)
-            if len(parts) == 2:
-                utt_id, text = parts
-                text_dict[utt_id] = text
-    return text_dict
-
-
-def count_tokens(text):
-    if text is None:
-        return 0
-
-    text = text.strip()
-    if not text:
-        return 0
-
-    # 한국어 char-level 기준
-    return len(text.replace(" ", ""))
 
 
 def praat_voice_quality(wav_path):
@@ -109,11 +85,8 @@ def praat_voice_quality(wav_path):
         return 0.0, 0.0, 0.0
 
 
-def extract_one(wav_path, text=None, sr=16000):
+def extract_one(wav_path, sr=16000):
     y, sr = librosa.load(wav_path, sr=sr, mono=True)
-
-    duration = librosa.get_duration(y=y, sr=sr)
-    duration = max(duration, 1e-6)
 
     # F0
     try:
@@ -131,11 +104,6 @@ def extract_one(wav_path, text=None, sr=16000):
         f0_std = 0.0
         f0_range = 0.0
 
-    # Token rate
-    token_count = count_tokens(text)
-    token_per_sec = token_count / duration if token_count > 0 else 0.0
-    duration_per_token = duration / token_count if token_count > 0 else duration
-
     # Silence / pause
     try:
         intervals = librosa.effects.split(y, top_db=30)
@@ -150,7 +118,7 @@ def extract_one(wav_path, text=None, sr=16000):
             pause = max(0, next_start - prev_end) / sr
             pause_durations.append(pause)
 
-        num_pauses = len(pause_durations)
+        num_pauses = float(len(pause_durations))
         mean_pause = float(np.mean(pause_durations)) if pause_durations else 0.0
 
     except Exception:
@@ -170,8 +138,6 @@ def extract_one(wav_path, text=None, sr=16000):
     feat = np.array([
         f0_std,
         f0_range,
-        token_per_sec,
-        duration_per_token,
         silence_ratio,
         num_pauses,
         mean_pause,
@@ -182,6 +148,12 @@ def extract_one(wav_path, text=None, sr=16000):
     ], dtype=np.float32)
 
     feat = np.nan_to_num(feat, nan=0.0, posinf=0.0, neginf=0.0)
+
+    assert feat.shape[0] == len(FEATURE_NAMES), (
+        f"Feature dimension mismatch: got {feat.shape[0]}, "
+        f"expected {len(FEATURE_NAMES)}"
+    )
+
     return feat
 
 
@@ -191,24 +163,23 @@ def read_wav_scp(wav_scp):
         for line in f:
             parts = line.strip().split(maxsplit=1)
             if len(parts) == 2:
-                items.append((parts[0], parts[1]))
+                utt_id, wav_path = parts
+                items.append((utt_id, wav_path))
     return items
 
 
-def extract_split(wav_scp, text_path, out_dir, sr=16000):
+def extract_split(wav_scp, out_dir, sr=16000):
     os.makedirs(out_dir, exist_ok=True)
     raw_dir = os.path.join(out_dir, "raw")
     os.makedirs(raw_dir, exist_ok=True)
 
-    text_dict = load_text(text_path)
     items = read_wav_scp(wav_scp)
 
     feats = []
     utt_ids = []
 
     for utt_id, wav_path in tqdm(items, desc=f"Extracting {out_dir}"):
-        text = text_dict.get(utt_id, "")
-        feat = extract_one(wav_path, text=text, sr=sr)
+        feat = extract_one(wav_path, sr=sr)
 
         np.save(os.path.join(raw_dir, f"{utt_id}.npy"), feat)
 
@@ -216,7 +187,6 @@ def extract_split(wav_scp, text_path, out_dir, sr=16000):
         utt_ids.append(utt_id)
 
     feats = np.stack(feats, axis=0)
-
     return utt_ids, feats
 
 
@@ -229,7 +199,12 @@ def save_normalized(utt_ids, feats, mean, std, out_dir):
     with open(scp_path, "w", encoding="utf-8") as scp:
         for utt_id, feat in zip(utt_ids, feats):
             norm_feat = (feat - mean) / std
-            norm_feat = np.nan_to_num(norm_feat, nan=0.0, posinf=0.0, neginf=0.0)
+            norm_feat = np.nan_to_num(
+                norm_feat,
+                nan=0.0,
+                posinf=0.0,
+                neginf=0.0,
+            )
 
             out_path = os.path.abspath(os.path.join(norm_dir, f"{utt_id}.npy"))
             np.save(out_path, norm_feat.astype(np.float32))
@@ -241,11 +216,8 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--train_wav_scp", required=True)
-    parser.add_argument("--train_text", required=True)
     parser.add_argument("--dev_wav_scp", required=True)
-    parser.add_argument("--dev_text", required=True)
     parser.add_argument("--test_wav_scp", required=True)
-    parser.add_argument("--test_text", required=True)
 
     parser.add_argument("--out_root", required=True)
     parser.add_argument("--sr", type=int, default=16000)
@@ -258,37 +230,46 @@ def main():
 
     train_ids, train_feats = extract_split(
         args.train_wav_scp,
-        args.train_text,
         train_dir,
         sr=args.sr,
     )
 
     dev_ids, dev_feats = extract_split(
         args.dev_wav_scp,
-        args.dev_text,
         dev_dir,
         sr=args.sr,
     )
 
     test_ids, test_feats = extract_split(
         args.test_wav_scp,
-        args.test_text,
         test_dir,
         sr=args.sr,
     )
 
+    # Normalization statistics are computed from train split only.
     mean = train_feats.mean(axis=0)
     std = train_feats.std(axis=0)
     std = np.where(std < 1e-6, 1.0, std)
 
     stats = {
         "feature_names": FEATURE_NAMES,
+        "feature_dim": len(FEATURE_NAMES),
         "mean": mean.tolist(),
         "std": std.tolist(),
+        "normalization": "train_split_only",
+        "reference_transcript_used": False,
+        "removed_reference_dependent_features": [
+            "token_per_sec",
+            "duration_per_token",
+        ],
     }
 
     os.makedirs(args.out_root, exist_ok=True)
-    with open(os.path.join(args.out_root, "acoustic_stats.json"), "w", encoding="utf-8") as f:
+    with open(
+        os.path.join(args.out_root, "acoustic_stats.json"),
+        "w",
+        encoding="utf-8",
+    ) as f:
         json.dump(stats, f, ensure_ascii=False, indent=2)
 
     save_normalized(train_ids, train_feats, mean, std, train_dir)

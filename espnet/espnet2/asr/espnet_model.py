@@ -25,7 +25,14 @@ from espnet2.legacy.nets.pytorch_backend.transformer.label_smoothing_loss import
 from espnet2.torch_utils.device_funcs import force_gatherable
 from espnet2.train.abs_espnet_model import AbsESPnetModel
 
-from espnet2.asr.acoustic_conditioning import AcousticConditioning
+# from espnet2.asr.acoustic_conditioning import AcousticConditioning
+from espnet2.asr.acoustic_conditioning_multi_head import MultiHeadAcousticConditioning as AcousticConditioning
+# from espnet2.asr.acoustic_conditioning_multi_head_ver2 import MultiHeadAcousticConditioningV2 as AcousticConditioning
+from espnet2.asr.acoustic_adaptive_reranker import AcousticAdaptiveScorer
+from espnet2.asr.temporal_acoustic_conditioning import (
+    TemporalAcousticConditioning,
+)
+from espnet2.asr.film_conditioning import FiLMAcousticConditioning
 
 autocast_type = torch.float16
 if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
@@ -69,9 +76,15 @@ class ESPnetASRModel(AbsESPnetModel):
         extract_feats_in_collect_stats: bool = True,
         lang_token_id: int = -1,
         use_acoustic_conditioning: bool = False,
-        acoustic_dim: int = 11,
+        use_temporal_acoustic_conditioning: bool = False,
+        use_film_conditioning: bool = False,
+        # acoustic_dim: int = 11,
+        acoustic_dim: int = 9,
         acoustic_condition_hidden_dim: int = 128,
         acoustic_condition_dropout: float = 0.1,
+        # Acoustic Adaptive
+        use_acoustic_adaptive: bool = False,
+        acoustic_adaptive_hidden_dim: int = 128,
     ):
         assert 0.0 <= ctc_weight <= 1.0, ctc_weight
         assert 0.0 <= interctc_weight < 1.0, interctc_weight
@@ -105,6 +118,7 @@ class ESPnetASRModel(AbsESPnetModel):
         self.postencoder = postencoder
         self.encoder = encoder
         
+        # Acoustic Conditioning
         self.use_acoustic_conditioning = use_acoustic_conditioning
 
         if self.use_acoustic_conditioning:
@@ -116,6 +130,77 @@ class ESPnetASRModel(AbsESPnetModel):
             )
         else:
             self.acoustic_conditioning = None
+
+        self.use_temporal_acoustic_conditioning = (
+            use_temporal_acoustic_conditioning
+        )
+
+        if (
+            self.use_acoustic_conditioning
+            and self.use_temporal_acoustic_conditioning
+        ):
+            raise ValueError(
+                "Original Acoustic Conditioning and "
+                "Temporal Acoustic Conditioning "
+                "cannot be enabled simultaneously."
+            )
+
+        if self.use_temporal_acoustic_conditioning:
+            self.temporal_acoustic_conditioning = (
+                TemporalAcousticConditioning(
+                    acoustic_dim=acoustic_dim,
+                    input_dim=80,
+                    hidden_dim=acoustic_condition_hidden_dim,
+                    dropout_rate=acoustic_condition_dropout,
+                )
+            )
+        else:
+            self.temporal_acoustic_conditioning = None
+
+        # FiLM Conditioning
+        self.use_film_conditioning = use_film_conditioning
+
+        if self.use_film_conditioning:
+            self.film_conditioning = FiLMAcousticConditioning(
+                acoustic_dim=acoustic_dim,
+                input_dim=80,
+                hidden_dim=acoustic_condition_hidden_dim,
+                dropout_rate=acoustic_condition_dropout,
+            )
+        else:
+            self.film_conditioning = None
+
+        # Prevent simultaneous encoder conditioning
+        if self.use_acoustic_conditioning and self.use_film_conditioning:
+            raise ValueError(
+                "use_acoustic_conditioning and use_film_conditioning "
+                "cannot both be True."
+            )
+
+        # Acoustic Adaptive Decoding
+        self.use_acoustic_adaptive = use_acoustic_adaptive
+
+        if self.use_acoustic_adaptive:
+
+            if not self.use_acoustic_conditioning:
+                raise ValueError(
+                    "Acoustic Adaptive requires "
+                    "Acoustic Conditioning."
+                )
+
+            self.acoustic_adaptive = AcousticAdaptiveScorer(
+                condition_dim=80,
+                vocab_size=vocab_size,
+                hidden_dim=acoustic_adaptive_hidden_dim,
+                ignore_token_ids=[
+                    self.blank_id,
+                    self.sos,
+                    self.eos,
+                ],
+            )
+
+        else:
+            self.acoustic_adaptive = None
 
         self.autocast_frontend = autocast_frontend
 
@@ -261,11 +346,27 @@ class ESPnetASRModel(AbsESPnetModel):
         # 1. Encoder
         # encoder_out, encoder_out_lens = self.encode(speech, speech_lengths)
         acoustic_feat = kwargs.get("acoustic_feat", None)
-        encoder_out, encoder_out_lens = self.encode(
-            speech,
-            speech_lengths,
-            acoustic_feat=acoustic_feat,
-        )
+        condition_vector = None
+        if self.use_acoustic_adaptive:
+            if acoustic_feat is None:
+                raise ValueError(
+                    "use_acoustic_adaptive=True, "
+                    "but acoustic_feat was not provided."
+                )
+
+            (encoder_out, encoder_out_lens, condition_vector) = self.encode(
+                speech,
+                speech_lengths,
+                acoustic_feat=acoustic_feat,
+                return_condition_vector=True,
+            )
+        else:
+            encoder_out, encoder_out_lens = self.encode(
+                speech,
+                speech_lengths,
+                acoustic_feat=acoustic_feat,
+            )
+
         intermediate_outs = None
         if isinstance(encoder_out, tuple):
             intermediate_outs = encoder_out[1]
@@ -366,7 +467,7 @@ class ESPnetASRModel(AbsESPnetModel):
             # 2c. Attention decoder branch
             if self.ctc_weight != 1.0:
                 loss_att, acc_att, cer_att, wer_att = self._calc_att_loss(
-                    encoder_out, encoder_out_lens, text, text_lengths
+                    encoder_out, encoder_out_lens, text, text_lengths, condition_vector=condition_vector,
                 )
 
             # 3. CTC-Att loss definition
@@ -409,6 +510,7 @@ class ESPnetASRModel(AbsESPnetModel):
         speech: torch.Tensor,
         speech_lengths: torch.Tensor,
         acoustic_feat: torch.Tensor = None,
+        return_condition_vector: bool = False,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Frontend + Encoder. Note that this method is used by asr_inference.py
 
@@ -431,9 +533,52 @@ class ESPnetASRModel(AbsESPnetModel):
         # Pre-encoder, e.g. used for raw input data
         if self.preencoder is not None:
             feats, feats_lengths = self.preencoder(feats, feats_lengths)
-            
-        if self.use_acoustic_conditioning and acoustic_feat is not None:
-            feats = self.acoustic_conditioning(feats, acoustic_feat)
+
+        condition_vector = None
+        # FiLM baseline
+        if self.use_film_conditioning and acoustic_feat is not None:
+            feats = self.film_conditioning(
+                feats,
+                acoustic_feat,
+            )
+
+        # Temporal Acoustic Conditioning
+        elif (
+            self.use_temporal_acoustic_conditioning
+            and acoustic_feat is not None
+        ):
+            if return_condition_vector:
+                feats, condition_vector = (
+                    self.temporal_acoustic_conditioning(
+                        feats,
+                        acoustic_feat,
+                        return_condition_vector=True,
+                    )
+                )
+            else:
+                feats = self.temporal_acoustic_conditioning(
+                    feats,
+                    acoustic_feat,
+                )
+
+        # Proposed Acoustic Conditioning
+        elif (
+            self.use_acoustic_conditioning
+            and acoustic_feat is not None
+        ):
+            if return_condition_vector:
+                feats, condition_vector = (
+                    self.acoustic_conditioning(
+                        feats,
+                        acoustic_feat,
+                        return_condition_vector=True,
+                    )
+                )
+            else:
+                feats = self.acoustic_conditioning(
+                    feats,
+                    acoustic_feat,
+                )
 
         # 4. Forward encoder
         # feats: (Batch, Length, Dim)
@@ -476,7 +621,16 @@ class ESPnetASRModel(AbsESPnetModel):
             )
 
         if intermediate_outs is not None:
-            return (encoder_out, intermediate_outs), encoder_out_lens
+            # return (encoder_out, intermediate_outs), encoder_out_lens
+            encoder_result = (encoder_out, intermediate_outs)
+
+            if return_condition_vector:
+                return (encoder_result, encoder_out_lens, condition_vector,)
+
+            return (encoder_result, encoder_out_lens)
+
+        if return_condition_vector:
+            return (encoder_out, encoder_out_lens, condition_vector)
 
         return encoder_out, encoder_out_lens
 
@@ -590,6 +744,7 @@ class ESPnetASRModel(AbsESPnetModel):
         encoder_out_lens: torch.Tensor,
         ys_pad: torch.Tensor,
         ys_pad_lens: torch.Tensor,
+        condition_vector: Optional[torch.Tensor] = None,
     ):
         if hasattr(self, "lang_token_id") and self.lang_token_id is not None:
             ys_pad = torch.cat(
@@ -608,6 +763,35 @@ class ESPnetASRModel(AbsESPnetModel):
         decoder_out, _ = self.decoder(
             encoder_out, encoder_out_lens, ys_in_pad, ys_in_lens
         )
+
+        # 2. Acoustic Adaptive residual scoring
+        if self.use_acoustic_adaptive:
+            if condition_vector is None:
+                raise RuntimeError(
+                    "Acoustic Adaptive is enabled, "
+                    "but condition_vector is None."
+                )
+
+            adaptive_scores = (
+                self.acoustic_adaptive.forward_train(
+                    condition_vector=condition_vector,
+                    ys_in_pad=ys_in_pad,
+                    ys_in_lens=ys_in_lens,
+                )
+            )
+
+            if adaptive_scores.shape != decoder_out.shape:
+                raise RuntimeError(
+                    "Adaptive score shape mismatch: "
+                    f"decoder={tuple(decoder_out.shape)}, "
+                    f"adaptive={tuple(adaptive_scores.shape)}"
+                )
+
+            # Acoustic-conditioned residual correction
+            decoder_out = (
+                decoder_out
+                + adaptive_scores
+            )
 
         # 2. Compute attention loss
         loss_att = self.criterion_att(decoder_out, ys_out_pad)
