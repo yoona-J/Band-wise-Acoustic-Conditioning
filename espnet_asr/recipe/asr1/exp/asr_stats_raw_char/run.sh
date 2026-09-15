@@ -1,0 +1,1 @@
+./asr.sh --stage 10 --stop_stage 10 --ngpu 1 --use_lm false --use_word_lm false --token_type char --train_set train --valid_set dev --test_sets test --asr_config conf/tuning/train_asr_conformer_ctc.yaml --asr_tag stats_only --stage 10 "$@"; exit $?

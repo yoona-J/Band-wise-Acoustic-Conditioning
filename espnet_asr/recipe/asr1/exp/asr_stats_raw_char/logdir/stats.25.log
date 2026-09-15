@@ -1,0 +1,9 @@
+# python3 -m espnet2.bin.asr_train --collect_stats true --use_preprocessor true --bpemodel none --token_type char --token_list data/token_list/char/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --train_shape_file exp/asr_stats_raw_char/logdir/train.25.scp --valid_shape_file exp/asr_stats_raw_char/logdir/valid.25.scp --output_dir exp/asr_stats_raw_char/logdir/stats.25 --config conf/tuning/train_asr_conformer_ctc.yaml --frontend_conf fs=16k --train_data_path_and_name_and_type dump/raw/train/wav.scp,speech,sound --valid_data_path_and_name_and_type dump/raw/dev/wav.scp,speech,sound --train_data_path_and_name_and_type dump/raw/train/text,text,text --valid_data_path_and_name_and_type dump/raw/dev/text,text,text 
+# Started at Mon May  4 23:39:47 KST 2026
+#
+WARNING:root:If you are running state-space model, run `pip install espnet['asr']`.
+/home/user/miniconda3/envs/yoona_asr/bin/python3 /home/user/Documents/yoona/dialect/espnet/espnet2/bin/asr_train.py --collect_stats true --use_preprocessor true --bpemodel none --token_type char --token_list data/token_list/char/tokens.txt --non_linguistic_symbols none --cleaner none --g2p none --train_shape_file exp/asr_stats_raw_char/logdir/train.25.scp --valid_shape_file exp/asr_stats_raw_char/logdir/valid.25.scp --output_dir exp/asr_stats_raw_char/logdir/stats.25 --config conf/tuning/train_asr_conformer_ctc.yaml --frontend_conf fs=16k --train_data_path_and_name_and_type dump/raw/train/wav.scp,speech,sound --valid_data_path_and_name_and_type dump/raw/dev/wav.scp,speech,sound --train_data_path_and_name_and_type dump/raw/train/text,text,text --valid_data_path_and_name_and_type dump/raw/dev/text,text,text
+WARNING:root:Set decoder to none as ctc_weight==1.0
+Failed to import Flash Attention, using ESPnet default: No module named 'flash_attn'
+# Accounting: time=4187 threads=1
+# Ended (code 0) at Tue May  5 00:49:34 KST 2026, elapsed time 4187 seconds

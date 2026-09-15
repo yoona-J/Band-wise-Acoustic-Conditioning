@@ -1,33 +1,91 @@
-# ESPnet ASR large artifacts
+# ============================================================
+# ESPnet ASR - Large datasets / downloaded artifacts
+# ============================================================
+
 espnet_asr/recipe/asr1/dump/
 espnet_asr/recipe/asr1/downloads/
 
-# Ignore heavy exp artifacts by default
-espnet_asr/recipe/asr1/exp/**
 
-# Allow exp directories
-!espnet_asr/recipe/asr1/exp/
-!espnet_asr/recipe/asr1/exp/*/
+# ============================================================
+# Heavy file types
+# ============================================================
 
-# Allow reproducibility files in all model dirs
-!espnet_asr/recipe/asr1/exp/*/config.yaml
-!espnet_asr/recipe/asr1/exp/*/train.log
-!espnet_asr/recipe/asr1/exp/*/valid.acc.ave.pth
-
-# Allow test result folders
-!espnet_asr/recipe/asr1/exp/*/direct_gpu_test*/
-!espnet_asr/recipe/asr1/exp/*/direct_gpu_test*/**
-
-# Allow Whisper result folders
-!espnet_asr/recipe/asr1/exp/whisper_*_test/
-!espnet_asr/recipe/asr1/exp/whisper_*_test/**
-!espnet_asr/recipe/asr1/exp/whisper_*_test_1k/
-!espnet_asr/recipe/asr1/exp/whisper_*_test_1k/**
-
-# Still block heavy artifacts if accidentally elsewhere
-espnet_asr/recipe/asr1/dump/
 *.ark
 *.npy
 *.npz
 *.wav
 *.flac
+
+
+# ============================================================
+# ESPnet experiment outputs
+# Ignore everything under exp by default
+# ============================================================
+
+espnet_asr/recipe/asr1/exp/**
+
+
+# ============================================================
+# Allow experiment directory structure
+# ============================================================
+
+!espnet_asr/recipe/asr1/exp/
+!espnet_asr/recipe/asr1/exp/*/
+
+
+# ============================================================
+# Common reproducibility files
+# ============================================================
+
+!espnet_asr/recipe/asr1/exp/*/config.yaml
+!espnet_asr/recipe/asr1/exp/*/train.log
+!espnet_asr/recipe/asr1/exp/*/valid.loss.best.pth
+
+
+# ============================================================
+# Decoding / evaluation results
+# ============================================================
+
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test/
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test/**
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test_all/
+!espnet_asr/recipe/asr1/exp/*/direct_gpu_test_all/**
+
+!espnet_asr/recipe/asr1/exp/*/att_ws/
+!espnet_asr/recipe/asr1/exp/*/att_ws/**
+
+
+# ============================================================
+# ESPnet statistics directories used for reproduction
+# ============================================================
+
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_hallu_fix/
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_hallu_fix/**
+
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_fix_hybrid_hallu_temporal_fix/
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_fix_hybrid_hallu_temporal_fix/**
+
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_fix_hybrid_hallu_voice/
+!espnet_asr/recipe/asr1/exp/asr_stats_ebranchformer_fix_hybrid_hallu_voice/**
+
+!espnet_asr/recipe/asr1/exp/asr_stats_raw_char/
+!espnet_asr/recipe/asr1/exp/asr_stats_raw_char/**
+
+
+# ============================================================
+# Whisper experiments
+# ============================================================
+
+!espnet_asr/recipe/asr1/exp/whisper_small_plain_full/
+!espnet_asr/recipe/asr1/exp/whisper_small_plain_full/**
+
+!espnet_asr/recipe/asr1/exp/whisper_small_bandwise_adapter_masked_full/
+!espnet_asr/recipe/asr1/exp/whisper_small_bandwise_adapter_masked_full/**
+
+
+# ============================================================
+# Speaker-disjoint evaluation
+# ============================================================
+
+!espnet_asr/recipe/asr1/speaker_disjoint_eval/
+!espnet_asr/recipe/asr1/speaker_disjoint_eval/**
