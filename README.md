@@ -51,7 +51,8 @@ The descriptor consists of three temporal features, `silence ratio`, `number of 
 
 ## Dataset
 
-The dataset composition after preprocessing is shown below.
+The dataset composition after preprocessing is shown below. <br />
+[Dataset download](https://doi.org/10.57967/hf/10460)
 
 | Split | Utterances | Speaker | Ratio |
 |---|---:|---:|---:|
@@ -65,8 +66,6 @@ The dataset composition after preprocessing is shown below.
 For evaluation, 1,521 test utterances from five speakers also appearing in the training or development split were excluded to avoid speaker leakage. All reported test results are therefore computed on 380,295 utterances.
 
 ### 1. Raw Speech Corpus (Baseline)
-
-Dataset: [LINK:: Raw Datasets](https://zenodo.org/records/20421255)
 
 `/raw` Contents:
 
@@ -83,8 +82,6 @@ Used by: Encoder Baseline models
 
 ### 2. Acoustic Features (BAC)
 
-Dataset: [LINK:: Acoustic Features Datasets](https://zenodo.org/records/20421255)
-
 `/hallu_acoustic_feats` Contents:
 
 ```
@@ -98,13 +95,8 @@ Contains: `acoustic_feats.scp`, `utterance-level acoustic features (.npy)`
 
 Used by: Multi-head Acoustic Conditioning (main)
 
-**#### 2.1. Temporal Acoustic Features (Ablation)**
-
-Dataset: [LINK:: Temporal Acoustic Features Datasets](https://zenodo.org/records/20421255)
-
-**#### 2.2. Voice Quality Features (Ablation)**
-
-Dataset: [LINK:: Voice Quality Features](https://zenodo.org/records/20421255)
+#### 2.1. Temporal Acoustic Features (Ablation)
+#### 2.2. Voice Quality Features (Ablation)
 
 `/hallu_acoustic_feats_temporal` and `/hallu_acoustic_feats_voice` used for: Ablation experiments only.
 
@@ -207,11 +199,7 @@ Note: For reproduction, the hallu_acoustic_feats dataset must be moved to `/espn
 
 Decoding is performed on the full processed test split (381,816 utterances). Before scoring, test utterances from speakers appearing in the training or development split are excluded to avoid speaker leakage.
 
-Generate the evaluation subset:
-
-```
-
-```
+[Generate the evaluation subset](speaker_disjoint_eval)
 
 Filter the decoded hypotheses using the evaluation IDs:
 
@@ -404,6 +392,8 @@ If you have any questions regarding this research, please contact us at the emai
 
 chungyn\@hanyang.ac.kr </br>
 
+All research was conducted using the ESPnet toolkit. [ESPnet](https://github.com/espnet/espnet)
+
 ---
 
 **Korean**<a name="Korean"></a>
@@ -464,8 +454,6 @@ chungyn\@hanyang.ac.kr </br>
 
 ### 1. Raw Speech Corpus (Baseline)
 
-Dataset: [LINK:: Raw Datasets](https://zenodo.org/records/20421255)
-
 `/raw` Contents:
 
 ```
@@ -482,8 +470,6 @@ Used by: Encoder Baseline models
 
 ### 2. Acoustic Features (BAC)
 
-Dataset: [LINK:: Acoustic Features Datasets](https://zenodo.org/records/20421255)
-
 `/hallu_acoustic_feats` Contents:
 
 ```
@@ -498,13 +484,7 @@ Contains: `acoustic_feats.scp`, `utterance-level acoustic features (.npy)`
 Used by: Multi-head Acoustic Conditioning (main)
 
 #### 2.1. Temporal Acoustic Features (Ablation)
-
-Dataset: [LINK:: Temporal Acoustic Features Datasets](https://zenodo.org/records/20421255)
-
 #### 2.2. Voice Quality Features (Ablation)
-
-Dataset: [LINK:: Voice Quality Features](https://zenodo.org/records/20421255)
-
 
 `/hallu_acoustic_feats_temporal` and `/hallu_acoustic_feats_voice` used for: Ablation experiments only.
 
@@ -607,11 +587,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m espnet2.bin.asr_inference \
 
 전처리된 전체 테스트 데이터셋(발화 381,816개)에 대해 디코딩을 수행한 후, 평가 점수를 산출할 때 화자 누수를 방지하기 위해 학습 또는 검증 데이터셋에 포함된 화자의 테스트 발화는 제외합니다. 
 
-평가용 서브셋:
-
-```
-
-```
+[Generate the evaluation subset](speaker_disjoint_eval)
 
 평가 ID를 사용해 디코딩 필터링:
 ```
@@ -801,3 +777,5 @@ CTC-only 실험에서는 beam size를 1, CTC weight를 1.0으로 설정하였습
 <a href=mailto:chungyn@hanyang.ac.kr> <img src="https://img.shields.io/badge/Gmail-EA4335?style=flat-square&logo=Gmail&logoColor=white&link=mailto:chungyn@hanyang.ac.kr"> </a>
 
 chungyn@hanyang.ac.kr </br>
+
+모든 연구는 ESPnet의 toolkit을 활용해 진행되었습니다. [ESPnet](https://github.com/espnet/espnet)
