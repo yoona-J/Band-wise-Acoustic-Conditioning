@@ -199,7 +199,7 @@ Note: For reproduction, the hallu_acoustic_feats dataset must be moved to `/espn
 
 Decoding is performed on the full processed test split (381,816 utterances). Before scoring, test utterances from speakers appearing in the training or development split are excluded to avoid speaker leakage.
 
-[Generate the evaluation subset](speaker_disjoint_eval)
+[Generate the evaluation subset](espnet_asr/recipe/asr1/speaker_disjoint_eval)
 
 Filter the decoded hypotheses using the evaluation IDs:
 
@@ -587,7 +587,7 @@ CUDA_VISIBLE_DEVICES=0 python3 -m espnet2.bin.asr_inference \
 
 전처리된 전체 테스트 데이터셋(발화 381,816개)에 대해 디코딩을 수행한 후, 평가 점수를 산출할 때 화자 누수를 방지하기 위해 학습 또는 검증 데이터셋에 포함된 화자의 테스트 발화는 제외합니다. 
 
-[Generate the evaluation subset](speaker_disjoint_eval)
+[Generate the evaluation subset](espnet_asr/recipe/asr1/speaker_disjoint_eval)
 
 평가 ID를 사용해 디코딩 필터링:
 ```
