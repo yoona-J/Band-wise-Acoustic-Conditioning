@@ -50,9 +50,9 @@ Therefore, this study proposes **BAC** to mitigate recognition instability in lo
 The descriptor consists of three temporal features, `silence ratio`, `number of pauses`, and `mean pause duration`, and six voice/prosodic features, `fundamental frequency (F0) standard deviation`, `F0 range`, `root-mean-square (RMS) energy`, `harmonic-to-noise ratio (HNR)`, `jitter`, and `shimmer`.
 
 ## Dataset
-
-The dataset composition after preprocessing is shown below. <br />
 [Dataset download](https://doi.org/10.57967/hf/10460)
+
+The dataset composition after preprocessing is shown below.
 
 | Split | Utterances | Speaker | Ratio |
 |---|---:|---:|---:|
@@ -437,6 +437,7 @@ All research was conducted using the ESPnet toolkit. [ESPnet](https://github.com
 이때, Descriptor는 세 개의 temporal feature인 `silence ratio`, `number of pauses`, `mean pause duration`과, 여섯 개의 voice/prosodic feature인 `fundamental frequency (F0) standard deviation`, `F0 range`, `root-mean-square (RMS) energy`, `harmonic-to-noise ratio (HNR)`, `jitter`, `shimmer`로 구성됩니다.
 
 ## Dataset
+[Dataset download](https://doi.org/10.57967/hf/10460)
 
 전처리 이후 연구에서 사용된 데이터셋의 구성은 아래와 같습니다
 
