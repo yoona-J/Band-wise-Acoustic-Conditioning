@@ -16,7 +16,7 @@ The experimental results can be reproduced by following the steps below. <br />
 
 ## Research Content
 
-Conversational automatic speech recognition (ASR) remains challenging for utterances with limited lexical content. We propose Band-wise Acoustic Conditioning (BAC), which uses a nine-dimensional, reference-free acoustic descriptor to generate gated residual corrections for four frequency bands before a shared encoder. On a large-scale Korean conversational corpus, BAC reduces character error rate (CER) from 11.49% to 8.33%, word error rate from 25.99% to 20.00%, and a heuristic hallucination-like output rate from 2.23% to 1.41% with E-Branchformer CTC. The largest absolute CER reduction occurs in long-sparse utterances with longer duration but few reference tokens. BAC also improves recognition with a frozen pretrained Whisper backbone, suggesting that its benefit is not specific to E-Branchformer. These results support utterance-level acoustic conditioning for improving conversational ASR, particularly for lexically sparse speech.
+Conversational automatic speech recognition (ASR) remains challenging for low-information utterances. We propose Band-wise Acoustic Conditioning (BAC), which uses a nine-dimensional, reference-free acoustic descriptor to generate gated residual corrections for four frequency bands before a shared encoder. On a large-scale Korean conversational corpus, BAC reduces character error rate (CER) from 11.49% to 8.33%, word error rate from 26.00% to 20.00%, and a heuristic hallucination-like output rate from 2.23% to 1.41% with E-Branchformer using connectionist temporal classification (CTC). The largest absolute CER reduction occurs in long-sparse utterances with longer duration but few reference tokens. BAC also improves recognition with a frozen pretrained Whisper-Small backbone, suggesting that its gains can transfer to a frozen pretrained backbone. These results support utterance-level acoustic conditioning for improving conversational ASR, particularly for lexically sparse speech.
 
 
 ---
@@ -406,7 +406,7 @@ All research was conducted using the ESPnet toolkit. [ESPnet](https://github.com
 
 ## Research Content
 
-대화형 자동 음성 인식(ASR)은 어휘 내용이 제한적인 발화에 대해 여전히 어려운 과제입니다. 본 논문에서는 9차원, 참조 토큰이 없는 음향 특징 기술자를 사용하여 공유 인코더 이전에 4개의 주파수 대역에 대한 게이트 잔차 보정을 생성하는 대역별 음향 조건화(BAC)를 제안합니다. 대규모 한국어 대화 코퍼스에서 BAC는 E-Branchformer CTC를 사용했을 때 문자 오류율(CER)을 11.49%에서 8.33%로, 단어 오류율을 25.99%에서 20.00%로, 그리고 휴리스틱 환각 유사 출력률을 2.23%에서 1.41%로 감소시킵니다. 가장 큰 절대적 CER 감소는 발화 지속 시간은 길지만 참조 토큰이 적은 긴 희소 발화에서 발생합니다. 또한 BAC는 고정된 사전 학습된 Whisper 백본을 사용했을 때도 인식률을 향상시켜, 그 효과가 E-Branchformer에만 국한되지 않음을 시사합니다. 이러한 결과는 특히 어휘가 부족한 음성에서 대화형 음성 인식(ASR)을 개선하기 위한 발화 수준의 음향 조건화가 유용함을 뒷받침합니다.
+대화형 자동 음성 인식(ASR)은 정보량이 적은 발화에 대해 여전히 어려운 과제입니다. 본 논문에서는 9차원, 참조 토큰이 없는 음향 특징 기술자를 사용하여 공유 인코더 이전에 4개의 주파수 대역에 대한 게이트 잔차 보정을 생성하는 대역별 음향 조건화(BAC)를 제안합니다. 대규모 한국어 대화 코퍼스에서 BAC는 연결주의 시간 분류(CTC)를 사용하는 E-Branchformer에서 문자 오류율(CER)을 11.49%에서 8.33%로, 단어 오류율을 26.00%에서 20.00%로, 그리고 휴리스틱 환각 유사 출력률을 2.23%에서 1.41%로 감소시킵니다. 가장 큰 절대 CER 감소는 발화 지속 시간은 길지만 참조 토큰 수가 적은 긴 희소 발화에서 발생합니다. 또한 BAC는 고정된 사전 학습된 Whisper-Small 백본을 사용했을 때도 인식률을 향상시켜, BAC의 개선 효과가 고정된 사전 학습된 백본에도 전이될 수 있음을 시사합니다. 이러한 결과는 특히 어휘가 부족한 음성에서 대화형 음성 인식(ASR)을 개선하기 위한 발화 수준의 음향 조건화가 유용함을 뒷받침합니다.
 
 ---
 
