@@ -1,4 +1,4 @@
-# BAC: BAND-WISE ACOUSTIC CONDITIONING FOR LOW-INFORMATION CONVERSATIONAL ASR
+# BAC TO BASICS: BAND-WISE ACOUSTIC CONDITIONING FOR LOW-INFORMATION CONVERSATIONAL ASR
 
 [[English]](#English) [[Korean]](#Korean)
 
@@ -16,7 +16,7 @@ The experimental results can be reproduced by following the steps below. <br />
 
 ## Research Content
 
-Conversational automatic speech recognition (ASR) remains challenging for low-information utterances. We propose Band-wise Acoustic Conditioning (BAC), which uses a nine-dimensional, reference-free acoustic descriptor to generate gated residual corrections for four frequency bands before a shared encoder. On a large-scale Korean conversational corpus, BAC reduces character error rate (CER) from 11.49% to 8.33%, word error rate from 26.00% to 20.00%, and a heuristic hallucination-like output rate from 2.23% to 1.41% with E-Branchformer using connectionist temporal classification (CTC). The largest absolute CER reduction occurs in long-sparse utterances with longer duration but few reference tokens. BAC also improves recognition with a frozen pretrained Whisper-Small backbone, suggesting that its gains can transfer to a frozen pretrained backbone. These results support utterance-level acoustic conditioning for improving conversational ASR, particularly for lexically sparse speech.
+Conversational automatic speech recognition (ASR) remains challenging for low-information utterances. We propose Band-wise Acoustic Conditioning (BAC), which uses a nine-dimensional, reference-free acoustic descriptor to generate gated residual corrections for four frequency bands before a shared encoder. On a large-scale Korean conversational corpus, BAC reduces character error rate (CER) from 11.49% to 8.33%, word error rate from 26.00% to 20.00%, and a heuristic hallucination-like output rate from 2.23% to 1.41% with E-Branchformer using connectionist temporal classification (CTC). The largest absolute CER reduction occurs in long-sparse utterances with longer duration but few reference tokens. BAC also improves recognition with a frozen pretrained Whisper-Small backbone, demonstrating its applicability beyond the primary E-Branchformer setting. These results support utterance-level acoustic conditioning for improving conversational ASR, particularly for lexically sparse speech.
 
 
 ---
