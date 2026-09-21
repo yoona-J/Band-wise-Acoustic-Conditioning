@@ -222,7 +222,7 @@ python calc_cer_wer.py \
   speaker_disjoint_eval/bac/1best_recog/text
 ```
 
-**### Ablation** 
+### Ablation
 
 Uses: `/hallu_acoustic_feats_temporal` dataset only.
 
